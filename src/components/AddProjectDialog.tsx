@@ -15,7 +15,8 @@ import { toast } from "sonner";
 
 interface ProjectFormData {
   name: string;
-  budget: string;
+  investment_goal: string;
+  initial_budget: string;
   spent: string;
   progress: string;
   deadline: string;
@@ -25,7 +26,8 @@ interface ProjectFormData {
 interface AddProjectDialogProps {
   onAddProject: (project: {
     name: string;
-    budget: number;
+    investment_goal: number;
+    initial_budget: number;
     spent: number;
     progress: number;
     deadline: string;
@@ -37,7 +39,8 @@ export const AddProjectDialog = ({ onAddProject }: AddProjectDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<ProjectFormData>({
     name: "",
-    budget: "",
+    investment_goal: "",
+    initial_budget: "",
     spent: "",
     progress: "",
     deadline: "",
@@ -47,7 +50,7 @@ export const AddProjectDialog = ({ onAddProject }: AddProjectDialogProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.budget || !formData.spent || !formData.progress || !formData.deadline) {
+    if (!formData.name || !formData.investment_goal || !formData.initial_budget || !formData.spent || !formData.progress || !formData.deadline) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -60,17 +63,18 @@ export const AddProjectDialog = ({ onAddProject }: AddProjectDialogProps) => {
 
     onAddProject({
       name: formData.name,
-      budget: parseFloat(formData.budget),
+      investment_goal: parseFloat(formData.investment_goal),
+      initial_budget: parseFloat(formData.initial_budget),
       spent: parseFloat(formData.spent),
       progress,
       deadline: formData.deadline,
       url: formData.url || undefined,
     });
 
-    toast.success("Projeto adicionado com sucesso!");
     setFormData({
       name: "",
-      budget: "",
+      investment_goal: "",
+      initial_budget: "",
       spent: "",
       progress: "",
       deadline: "",
@@ -117,15 +121,26 @@ export const AddProjectDialog = ({ onAddProject }: AddProjectDialogProps) => {
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="investment_goal">Meta de Investimento (R$) *</Label>
+            <Input
+              id="investment_goal"
+              type="number"
+              placeholder="50000"
+              value={formData.investment_goal}
+              onChange={(e) => setFormData({ ...formData, investment_goal: e.target.value })}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="budget">Orçamento (R$) *</Label>
+              <Label htmlFor="initial_budget">Pré-Orçamento (R$) *</Label>
               <Input
-                id="budget"
+                id="initial_budget"
                 type="number"
                 placeholder="10000"
-                value={formData.budget}
-                onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                value={formData.initial_budget}
+                onChange={(e) => setFormData({ ...formData, initial_budget: e.target.value })}
               />
             </div>
 

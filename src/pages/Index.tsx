@@ -1,58 +1,44 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProjectCard } from "@/components/ProjectCard";
 import { AddProjectDialog } from "@/components/AddProjectDialog";
-import { Sprout, BarChart3 } from "lucide-react";
-
-interface Project {
-  id: string;
-  name: string;
-  progress: number;
-  budget: number;
-  spent: number;
-  deadline: string;
-  url?: string;
-}
+import { AuthForm } from "@/components/AuthForm";
+import { useProjects } from "@/hooks/useProjects";
+import { supabase } from "@/integrations/supabase/client";
+import { Sprout, BarChart3, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Index = () => {
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: "1",
-      name: "Portal E-commerce Completo",
-      progress: 75,
-      budget: 25000,
-      spent: 18500,
-      deadline: "2025-12-31",
-      url: "https://exemplo-ecommerce.com",
-    },
-    {
-      id: "2",
-      name: "Landing Page Institucional",
-      progress: 40,
-      budget: 8000,
-      spent: 3200,
-      deadline: "2025-11-15",
-    },
-    {
-      id: "3",
-      name: "Sistema de Gestão Interno",
-      progress: 90,
-      budget: 45000,
-      spent: 42000,
-      deadline: "2025-10-30",
-      url: "https://sistema-interno.com",
-    },
-  ]);
+  const [user, setUser] = useState<any>(null);
+  const { projects, isLoading, addProject, deleteProject } = useProjects();
 
-  const handleAddProject = (projectData: Omit<Project, "id">) => {
-    const newProject: Project = {
-      ...projectData,
-      id: Date.now().toString(),
-    };
-    setProjects([newProject, ...projects]);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Logout realizado com sucesso!");
   };
 
-  const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
-  const totalSpent = projects.reduce((sum, p) => sum + p.spent, 0);
+  if (!user) {
+    return <AuthForm />;
+  }
+
+  const totalInvestmentGoal = projects.reduce((sum, p) => sum + Number(p.investment_goal), 0);
+  const totalSpent = projects.reduce((sum, p) => sum + Number(p.spent), 0);
+  const totalBudget = projects.reduce((sum, p) => sum + Number(p.initial_budget), 0);
+  const totalRemaining = totalBudget - totalSpent;
   const averageProgress = projects.length > 0 
     ? Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length)
     : 0;
@@ -62,14 +48,24 @@ const Index = () => {
       {/* Header */}
       <header className="bg-primary text-primary-foreground shadow-lg">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary-foreground/10 p-2 rounded-lg">
-              <Sprout className="h-8 w-8" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary-foreground/10 p-2 rounded-lg">
+                <Sprout className="h-8 w-8" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Safra Cheia</h1>
+                <p className="text-sm text-primary-foreground/80">Gestão de Projetos</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">Safra Cheia</h1>
-              <p className="text-sm text-primary-foreground/80">Gestão de Projetos</p>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="text-primary-foreground hover:bg-primary-foreground/10"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </header>
@@ -88,10 +84,30 @@ const Index = () => {
           <div className="bg-card p-4 rounded-xl shadow-md border border-border/50">
             <div className="flex items-center gap-2 text-muted-foreground mb-2">
               <BarChart3 className="h-4 w-4" />
-              <span className="text-xs font-medium">Total Investido</span>
+              <span className="text-xs font-medium">Total Gasto</span>
             </div>
             <p className="text-2xl font-bold text-primary">
               R$ {totalSpent.toLocaleString('pt-BR')}
+            </p>
+          </div>
+
+          <div className="bg-card p-4 rounded-xl shadow-md border border-border/50">
+            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="text-xs font-medium">Saldo Total</span>
+            </div>
+            <p className={`text-2xl font-bold ${totalRemaining >= 0 ? 'text-success' : 'text-destructive'}`}>
+              R$ {Math.abs(totalRemaining).toLocaleString('pt-BR')}
+            </p>
+          </div>
+
+          <div className="bg-card p-4 rounded-xl shadow-md border border-border/50">
+            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="text-xs font-medium">Meta Total</span>
+            </div>
+            <p className="text-2xl font-bold text-accent">
+              R$ {totalInvestmentGoal.toLocaleString('pt-BR')}
             </p>
           </div>
         </div>
@@ -104,7 +120,11 @@ const Index = () => {
             </h2>
           </div>
           
-          {projects.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Carregando projetos...</p>
+            </div>
+          ) : projects.length === 0 ? (
             <div className="text-center py-12">
               <Sprout className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
               <p className="text-muted-foreground">
@@ -113,14 +133,18 @@ const Index = () => {
             </div>
           ) : (
             projects.map((project) => (
-              <ProjectCard key={project.id} {...project} />
+              <ProjectCard 
+                key={project.id} 
+                {...project}
+                onDelete={deleteProject}
+              />
             ))
           )}
         </div>
       </div>
 
       {/* Floating Action Button */}
-      <AddProjectDialog onAddProject={handleAddProject} />
+      <AddProjectDialog onAddProject={addProject} />
     </div>
   );
 };
