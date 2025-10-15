@@ -58,6 +58,38 @@ export const useTransactions = (projectId: string) => {
     },
   });
 
+  const updateTransaction = useMutation({
+    mutationFn: async ({
+      id,
+      updates,
+    }: {
+      id: string;
+      updates: {
+        description: string;
+        amount: number;
+        transaction_date: string;
+      };
+    }) => {
+      const { data, error } = await supabase
+        .from("transactions")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Lançamento atualizado!");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Erro ao atualizar lançamento");
+    },
+  });
+
   const deleteTransaction = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("transactions").delete().eq("id", id);
@@ -77,6 +109,7 @@ export const useTransactions = (projectId: string) => {
     transactions,
     isLoading,
     addTransaction: addTransaction.mutate,
+    updateTransaction: updateTransaction.mutate,
     deleteTransaction: deleteTransaction.mutate,
   };
 };

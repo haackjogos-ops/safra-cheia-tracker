@@ -13,7 +13,7 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const { projects, isLoading, addProject, deleteProject } = useProjects();
+  const { projects, isLoading, addProject, updateProject, deleteProject } = useProjects();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -158,6 +158,7 @@ const Index = () => {
         project={selectedProject}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
+        onUpdateProject={(id, updates) => updateProject({ id, updates })}
       />
     </div>
   );

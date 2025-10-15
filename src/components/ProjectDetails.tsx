@@ -1,22 +1,27 @@
+import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
 import { AddTransactionDialog } from "./AddTransactionDialog";
 import { useTransactions } from "@/hooks/useTransactions";
 import { Project } from "@/hooks/useProjects";
-import { Trash2, Calendar, DollarSign, TrendingUp, Target, Globe } from "lucide-react";
+import { Trash2, Calendar, DollarSign, TrendingUp, Target, Globe, Pencil } from "lucide-react";
 
 interface ProjectDetailsProps {
   project: Project | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpdateProject: (id: string, updates: Partial<Project>) => void;
 }
 
-export const ProjectDetails = ({ project, open, onOpenChange }: ProjectDetailsProps) => {
+export const ProjectDetails = ({ project, open, onOpenChange, onUpdateProject }: ProjectDetailsProps) => {
+  const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  
   if (!project) return null;
 
-  const { transactions, isLoading, addTransaction, deleteTransaction } = useTransactions(project.id);
+  const { transactions, isLoading, addTransaction, updateTransaction, deleteTransaction } = useTransactions(project.id);
   
   const remainingBudget = project.initial_budget - project.spent;
   const budgetPercentage = (project.spent / project.initial_budget) * 100;
@@ -53,7 +58,7 @@ export const ProjectDetails = ({ project, open, onOpenChange }: ProjectDetailsPr
           </div>
 
           {/* Progress */}
-          <div className="space-y-2 p-4 rounded-lg bg-secondary/50">
+          <div className="space-y-3 p-4 rounded-lg bg-secondary/50">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
@@ -64,6 +69,17 @@ export const ProjectDetails = ({ project, open, onOpenChange }: ProjectDetailsPr
               </Badge>
             </div>
             <Progress value={project.progress} className="h-2" />
+            <div className="pt-2">
+              <Slider
+                value={[project.progress]}
+                onValueChange={(value) => {
+                  onUpdateProject(project.id, { progress: value[0] });
+                }}
+                max={100}
+                step={1}
+                className="w-full"
+              />
+            </div>
           </div>
 
           {/* Investment Goal */}
@@ -142,6 +158,19 @@ export const ProjectDetails = ({ project, open, onOpenChange }: ProjectDetailsPr
                       <span className="font-semibold text-sm">
                         R$ {Number(transaction.amount).toLocaleString('pt-BR')}
                       </span>
+                      <AddTransactionDialog
+                        transaction={transaction}
+                        onUpdateTransaction={(id, updates) => updateTransaction({ id, updates })}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
                       <Button
                         variant="ghost"
                         size="icon"
