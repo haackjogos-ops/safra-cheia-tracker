@@ -18,10 +18,9 @@ interface ProjectDetailsProps {
 
 export const ProjectDetails = ({ project, open, onOpenChange, onUpdateProject }: ProjectDetailsProps) => {
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const { transactions, isLoading, addTransaction, updateTransaction, deleteTransaction } = useTransactions(project?.id || '');
   
   if (!project) return null;
-
-  const { transactions, isLoading, addTransaction, updateTransaction, deleteTransaction } = useTransactions(project.id);
   
   const remainingBudget = project.initial_budget - project.spent;
   const budgetPercentage = (project.spent / project.initial_budget) * 100;
