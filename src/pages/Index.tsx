@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { ProjectCard } from "@/components/ProjectCard";
 import { AddProjectDialog } from "@/components/AddProjectDialog";
 import { AuthForm } from "@/components/AuthForm";
-import { useProjects } from "@/hooks/useProjects";
+import { ProjectDetails } from "@/components/ProjectDetails";
+import { useProjects, Project } from "@/hooks/useProjects";
 import { supabase } from "@/integrations/supabase/client";
 import { Sprout, BarChart3, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,8 @@ import { toast } from "sonner";
 
 const Index = () => {
   const [user, setUser] = useState<any>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const { projects, isLoading, addProject, deleteProject } = useProjects();
 
   useEffect(() => {
@@ -137,6 +140,10 @@ const Index = () => {
                 key={project.id} 
                 {...project}
                 onDelete={deleteProject}
+                onOpenDetails={() => {
+                  setSelectedProject(project);
+                  setDetailsOpen(true);
+                }}
               />
             ))
           )}
@@ -145,6 +152,13 @@ const Index = () => {
 
       {/* Floating Action Button */}
       <AddProjectDialog onAddProject={addProject} />
+
+      {/* Project Details Sheet */}
+      <ProjectDetails 
+        project={selectedProject}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
     </div>
   );
 };

@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, DollarSign, Calendar, Globe, Target, Trash2 } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, Globe, Target, Trash2, ChevronRight } from "lucide-react";
 
 interface ProjectCardProps {
   id: string;
@@ -14,6 +14,7 @@ interface ProjectCardProps {
   deadline: string;
   url?: string;
   onDelete?: (id: string) => void;
+  onOpenDetails?: () => void;
 }
 
 export const ProjectCard = ({
@@ -26,6 +27,7 @@ export const ProjectCard = ({
   deadline,
   url,
   onDelete,
+  onOpenDetails,
 }: ProjectCardProps) => {
   const remainingBudget = initial_budget - spent;
   const budgetPercentage = (spent / initial_budget) * 100;
@@ -45,7 +47,10 @@ export const ProjectCard = ({
   };
 
   return (
-    <Card className="p-5 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-secondary/30 border-border/50">
+    <Card 
+      className="p-5 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-secondary/30 border-border/50 cursor-pointer"
+      onClick={onOpenDetails}
+    >
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
@@ -74,12 +79,16 @@ export const ProjectCard = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onDelete(id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(id);
+                }}
                 className="h-8 w-8 text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </div>
         </div>
 
