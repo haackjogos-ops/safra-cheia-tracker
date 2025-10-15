@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,14 @@ interface ProjectDetailsProps {
 
 export const ProjectDetails = ({ project, open, onOpenChange, onUpdateProject }: ProjectDetailsProps) => {
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const [localProgress, setLocalProgress] = useState(0);
   const { transactions, isLoading, addTransaction, updateTransaction, deleteTransaction } = useTransactions(project?.id || '');
+  
+  useEffect(() => {
+    if (project) {
+      setLocalProgress(project.progress);
+    }
+  }, [project?.progress]);
   
   if (!project) return null;
   
@@ -70,7 +77,8 @@ export const ProjectDetails = ({ project, open, onOpenChange, onUpdateProject }:
             <Progress value={project.progress} className="h-2" />
             <div className="pt-2">
               <Slider
-                value={[project.progress]}
+                value={[localProgress]}
+                onValueChange={(value) => setLocalProgress(value[0])}
                 onValueCommit={(value) => {
                   onUpdateProject(project.id, { progress: value[0] });
                 }}
