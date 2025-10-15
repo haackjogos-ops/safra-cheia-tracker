@@ -72,7 +72,7 @@ export const ProjectDetails = ({ project, open, onOpenChange, onUpdateProject }:
             <div className="pt-2">
               <Slider
                 value={[project.progress]}
-                onValueChange={(value) => {
+                onValueCommit={(value) => {
                   onUpdateProject(project.id, { progress: value[0] });
                 }}
                 max={100}
